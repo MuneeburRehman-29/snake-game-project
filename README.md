@@ -1,19 +1,13 @@
-Simple Raylib Ball Game
-
+# Simple Raylib Ball Game
 A small C++ game made using Raylib.
 You control a white ball that moves around the screen, wraps around the edges, and eats a red food circle that respawns randomly.
 
 This project is perfect for beginners learning:
-
-window creation
-
-drawing shapes
-
-movement handling
-
-collisions
-
-randomness
+1. window creation
+2.drawing shapes
+3. movement handling
+4. collisions
+5. randomness
 
 How to Use This Project
 
@@ -50,7 +44,7 @@ Then run:
 
 ./game
 
-Code Explanation
+# Code Explanation
 
 Everything below explains how the program works, part by part.
 
