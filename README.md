@@ -15,7 +15,7 @@ A feature-rich implementation of the classic **Snake** game written in **C++** u
 
 ### Game Logic (The Engineering)
 Unlike simple clones, this game runs on a structured **Game Loop** handling Initialization, Updates, and Drawing phases separately.
-![Game Flowchart](assets/flowOfTheGame.jpg)
+![Game Flowchart](assets/flowOfTheGame.png)
 
 ---
 
