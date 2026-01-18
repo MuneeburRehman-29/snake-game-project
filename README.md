@@ -1,186 +1,70 @@
 # 🐍 Snake Game — Ultimate Version
 
-A feature-rich implementation of the classic **Snake** game written in **C++** using the **Raylib** library. Includes multiple game modes (Easy / Normal / Hard / Story), persistent save & high-score, dynamic themes, and polished visuals.
+> **Created by Group 404 Not Found:** > Muneeb ur Rehman | Muhammad Umais | Sadia Sahar
+
+A feature-rich implementation of the classic **Snake** game written in **C++** using the **Raylib** library. This project goes beyond the basics with multiple game modes (Easy / Normal / Hard / Story), persistent save & high-score systems, dynamic themes, and polished visuals.
 
 ---
 
-## Table of Contents
+## 📸 Demo & Architecture
 
-* [Demo / Screenshots](#demo--screenshots)
-* [Features](#features)
-* [Controls](#controls)
-* [Prerequisites](#prerequisites)
-* [Folder Structure](#folder-structure)
-* [Build & Run](#build--run)
-* [Game Modes Explained](#game-modes-explained)
-* [Save Files](#save-files)
-* [Project Info & Credits](#project-info--credits)
-* [License](#license)
+### Gameplay Preview
+| Main Menu | Dynamic Themes |
+| :---: | :---: |
+| ![Main Menu](assets/Menu.png) | ![Themes](assets/Desert Theme.png) |
+
+### Game Logic (The Engineering)
+Unlike simple clones, this game runs on a structured **Game Loop** handling Initialization, Updates, and Drawing phases separately.
+![Game Flowchart](assets/flowOfTheGame.jpg)
 
 ---
 
-## Demo / Screenshots
-
-*(Add screenshots/gifs of your game here for a nicer GitHub README.)*
-
----
-
-## Features
+## 🚀 Features
 
 * **4 Game Modes**
-
-  * Easy (wrap-around, no walls)
-  * Normal (walls active)
-  * Hard (walls + static obstacles)
-  * Story (progressive difficulty with autosave)
-* **Save & Load** for Story mode (auto-save + continue)
-* **High Score Tracking**
-* **Dynamic Themes** (e.g., Classic / Desert)
-* **Polished visuals** (eye mechanics, transitions, animations)
-
----
-
-## Controls
-
-| Key        | Action                                |
-| ---------- | ------------------------------------- |
-| Arrow Keys | Move snake (Up / Down / Left / Right) |
-| Enter      | Select menu option                    |
-| ESC        | Pause / Return to menu                |
-| R          | Restart (on Game Over screen)         |
+    * **Easy:** Wrap-around movement (Pac-Man style). No walls.
+    * **Normal:** Standard rules. Walls are fatal.
+    * **Hard:** Walls + static obstacles to navigate around.
+    * **Story:** Progressive difficulty that changes with your score.
+* **💾 Save & Load:** Story mode features **auto-save**, allowing you to continue progress across sessions.
+* **🏆 High Score Tracking:** Persistently saves your best runs to `highscore.txt`.
+* **🎨 Dynamic Themes:** Switch visuals instantly (e.g., Classic Green vs. Desert).
+* **⚙️ Polished Mechanics:** Smooth eye-movement animations and grid-based collision logic.
 
 ---
 
-## Prerequisites
+## 🎮 Controls
+
+| Key | Action |
+| :--- | :--- |
+| **Arrow Keys** | Move snake (Up / Down / Left / Right) |
+| **Enter** | Select menu option |
+| **ESC** | Pause / Return to menu |
+| **R** | Restart (visible on Game Over screen) |
+
+---
+
+## 🛠️ Prerequisites
 
 ### Core Tools
-
 * **C++ compiler:** `g++` (MinGW on Windows), `clang`, or MSVC.
-* **Code editor (recommended):** Visual Studio Code, or Visual Studio Community on Windows.
+* **Code editor:** Visual Studio Code (Recommended).
 
 ### Required Library
-
-* **Raylib** — games use Raylib for graphics/input/audio.
-
-  * Download Raylib releases from the official repo: `https://github.com/raysan5/raylib/releases`
-  * On Windows the **w64devkit** installer or prebuilt packages are the easiest route.
+* **Raylib:** This project uses Raylib for graphics, input, and audio.
+    * [Download Raylib Releases](https://github.com/raysan5/raylib/releases)
+    * *Tip:* On Windows, the **w64devkit** installer is the easiest route.
 
 ---
 
-## Folder Structure (recommended)
+## 📂 Folder Structure
 
-```
+```text
 Project Folder/
 ├── main.cpp          # Source code entry point
-├── lib/              # raylib library files (e.g., libraylib.a)
+├── lib/              # Raylib library files (e.g., libraylib.a)
 ├── include/          # raylib.h and other headers
-├── assets/           # images, fonts, audio (if any)
-├── savefile.txt      # (auto-created) story progress
-├── highscore.txt     # (auto-created) persistent high score
-└── .vscode/          # optional VS Code tasks / launch configs
-```
-
----
-
-## Build & Run
-
-### Command-Line (Windows with g++)
-
-If Raylib is installed and available to the linker:
-
-```bash
-g++ main.cpp -o SnakeGame -lraylib -lgdi32 -lwinmm
-```
-
-> The `-lgdi32 -lwinmm` flags are needed on Windows. Linux/macOS generally require only `-lraylib` (platform-specific audio/window libs may vary).
-
-### Example (Linux/macOS)
-
-```bash
-g++ main.cpp -o SnakeGame -lraylib
-```
-
-### Using Visual Studio Code
-
-1. Place `raylib` headers in `include/` and library files in `lib/` (or install raylib system-wide).
-2. Create a `.vscode/tasks.json` entry that compiles with the proper flags:
-
-```json
-{
-  "version": "2.0.0",
-  "tasks": [
-    {
-      "label": "Build SnakeGame",
-      "type": "shell",
-      "command": "g++",
-      "args": [
-        "main.cpp",
-        "-o",
-        "SnakeGame",
-        "-lraylib",
-        "-lgdi32",
-        "-lwinmm"
-      ],
-      "group": "build"
-    }
-  ]
-}
-```
-
-3. Run the build task (`Terminal → Run Build Task`) and execute the produced binary.
-
----
-
-## Game Modes Explained
-
-* **Easy**
-
-  * No walls: the snake wraps around screen edges.
-  * Good for learning controls and mechanics.
-* **Normal**
-
-  * Standard rules: walls are fatal.
-* **Hard**
-
-  * Walls + static obstacles to navigate around.
-* **Story**
-
-  * Progressive difficulty that changes with score:
-
-    * Level 1 (0–50 pts): beginner-friendly.
-    * Level 2 (50–100 pts): walls active.
-    * Level 3 (100+ pts): obstacles spawn.
-  * Story mode **auto-saves** progress so you can continue later.
-
----
-
-## Save Files
-
-* `savefile.txt` — automatically created (Story mode progress).
-* `highscore.txt` — stores the persisted high score across sessions.
-
-> Ensure your game has write permission in the project directory so these files can be created.
-
----
-
-## Notes & Tips
-
-* If compilation fails with linker errors, double-check:
-
-  * Raylib library path (e.g., `-L/path/to/lib`) and include path (e.g., `-I/path/to/include`).
-  * On Windows, ensure MinGW/MSYS environments are consistent with the compiler used.
-* For smooth development in VS Code, install the C/C++ extension and configure your includePath and compilerPath in `c_cpp_properties.json`.
-
----
-
-## Project Info & Credits
-
-* **Engine / Library:** Raylib ([https://www.raylib.com](https://www.raylib.com) )
-* **Language:** C++ (std library: `<string>`, `<fstream>`, `<cmath>`, etc.)
-* **Created by:** *Group 404 Not Found : Muneeb ur Rehman , Muhammad Umais , Sadia Sahar* 
-
----
-
-
-
----
+├── assets/           # Store your images (Menu.png, etc.) here
+├── savefile.txt      # (Auto-created) Story progress
+├── highscore.txt     # (Auto-created) Persistent high score
+└── .vscode/          # VS Code tasks / launch configs
