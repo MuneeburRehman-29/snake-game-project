@@ -2,19 +2,24 @@
 #include <stdlib.h>
 #include <string>
 #include <fstream>
-#include <vector>
 #include <cstdio>
 #include <cmath>
 
-// --- Enum ---
-enum GameMode { EASY = 0, NORMAL = 1, HARD = 2, STORY = 3 };
+// difficulty levels
+enum GameMode
+{
+    EASY = 0,
+    NORMAL = 1,
+    HARD = 2,
+    STORY = 3
+};
 
-// --- Struct to hold the entire Game State ---
-// This keeps main() clean and allows us to pass "game" to functions easily.
-struct GameState {
-    int stateofgame = 0; // 0 = Menu, 2 = Gameplay
+// keeps track of everything happening in the game
+struct GameState
+{
+    int stateofgame = 0; // 0 = menu, 2 = playing
     int menuOption = 1;
-    
+
     GameMode currentMode = NORMAL;
     std::string theme = "Classic";
     int storyLevel = 1;
@@ -23,35 +28,35 @@ struct GameState {
     int score = 0;
     int highscore = 0;
 
-    // Snake Data
+    // snake properties
     int snakeLength = 4;
     int snakePosition[1024][2] = {0};
-    int snakeX, snakeY; // Initial positions
+    int snakeX, snakeY;
     char key = 'R';
 
-    // Food Data
+    // food pos
     int foodX = 0;
     int foodY = 0;
 
-    // Movement & Timing
+    // speed control
     float moveTimer = 0.0f;
     float moveInterval = 0.1f;
     bool allowMove = false;
 
-    // Story Transition
+    // level switching
     bool isLevelTransitioning = false;
     float transitionTimer = 0.0f;
     const float transitionDuration = 3.0f;
 
-    // Hurdles
+    // obstacles
     int hurdles[100][2];
     int hurdleCount = 0;
 
-    // File State
+    // save system
     bool hasSaveFile = false;
 };
 
-// --- Global Constants (Calculated in Main) ---
+// globals (calculated later)
 int screenWidth;
 int screenHeight;
 const int cellSize = 40;
@@ -59,8 +64,7 @@ int boardWidth, boardHeight;
 int gridCountX, gridCountY;
 int boardOffsetX, boardOffsetY;
 
-// --- Function Prototypes ---
-// (This tells the compiler these functions exist below main)
+// definitions
 void InitGameGrid();
 void InitHurdles(GameState &game);
 void LoadHighscore(GameState &game);
@@ -74,51 +78,50 @@ void UpdateGameplay(GameState &game);
 void DrawMenu(GameState &game);
 void DrawGameplay(GameState &game);
 
-// ==========================================
-//              MAIN FUNCTION
-// ==========================================
 int main()
 {
     InitWindow(0, 0, "Snake Game - Ultimate Version");
     SetTargetFPS(60);
 
-    InitGameGrid(); // Calculate board size/offsets
+    InitGameGrid(); // setup the board dimensions
 
-    // Initialize State
+    // setup state
     GameState game;
     game.snakeX = gridCountX / 2;
     game.snakeY = gridCountY / 2;
-    
-    // Setup initial Environment
+
+    // load assets and data
     InitHurdles(game);
     LoadHighscore(game);
     CheckSaveFile(game);
-    ResetGame(game, true); // Initial reset to set safe defaults
+    ResetGame(game, true);
 
-    // --- Main Loop ---
+    // main loop
     while (true)
     {
-        
-        // 1. UPDATE LOGIC
-        if (game.stateofgame == 0)
+        // update loop
+        switch (game.stateofgame)
         {
+        case 0:
             UpdateMenu(game);
-        }
-        if (game.stateofgame == 2)
-        {
-            if (IsKeyPressed(KEY_ESCAPE)) game.stateofgame = 0;
+            break;
+        case 2:
+            if (IsKeyPressed(KEY_ESCAPE))
+                game.stateofgame = 0;
             UpdateGameplay(game);
+            break;
         }
 
-        // 2. DRAWING
+        // render loop
         BeginDrawing();
-        if (game.stateofgame == 0)
+        switch (game.stateofgame)
         {
+        case 0:
             DrawMenu(game);
-        }
-        else if (game.stateofgame == 2)
-        {
+            break;
+        case 2:
             DrawGameplay(game);
+            break;
         }
         EndDrawing();
     }
@@ -127,28 +130,34 @@ int main()
     return 0;
 }
 
-// ==========================================
-//          FUNCTION DEFINITIONS
-// ==========================================
+//
+// IMPLEMENTATION
+//
 
-// Helper: Calculates grid dimensions based on screen size
-void InitGameGrid() {
+void InitGameGrid()
+{
+    // getting the screen dimensions
     screenWidth = GetScreenWidth();
     screenHeight = GetScreenHeight();
-    
+
+    // adding padding for better UX
     int rawBoardWidth = screenWidth - 120;
     int rawBoardHeight = screenHeight - 120;
+
+    // phir check kia ke whether it's divisible by cellSize or not.
+    // if not then we minus the remainder to make it divisible
     boardWidth = rawBoardWidth - (rawBoardWidth % cellSize);
     boardHeight = rawBoardHeight - (rawBoardHeight % cellSize);
 
     gridCountX = boardWidth / cellSize;
     gridCountY = boardHeight / cellSize;
 
+    // center the board
     boardOffsetX = (screenWidth - boardWidth) / 2;
     boardOffsetY = (screenHeight - boardHeight) / 2;
 }
 
-// Helper: The block checking logic from original code
+// checks if a coordinate hits the snake or a wall
 bool IsTileBlocked(int x, int y, GameState &game, bool hurdlesActive)
 {
     for (int i = 0; i < game.snakeLength; i++)
@@ -168,10 +177,11 @@ bool IsTileBlocked(int x, int y, GameState &game, bool hurdlesActive)
     return false;
 }
 
-// Resets variables for a new game or restart
+// resets game state
 void ResetGame(GameState &game, bool fullReset)
 {
-    if (fullReset) {
+    if (fullReset)
+    {
         game.gameOver = false;
         game.score = 0;
         game.storyLevel = 1;
@@ -184,7 +194,7 @@ void ResetGame(GameState &game, bool fullReset)
         game.transitionTimer = 0.0f;
     }
 
-    // Reset Position to Center
+    // reset snake to middle
     int cx = gridCountX / 2;
     int cy = gridCountY / 2;
     for (int i = 0; i < game.snakeLength; i++)
@@ -193,7 +203,7 @@ void ResetGame(GameState &game, bool fullReset)
         game.snakePosition[i][1] = cy;
     }
 
-    // Spawn Food
+    // spawn food somewhere safe
     bool hurdlesActive = (game.currentMode == HARD || (game.currentMode == STORY && game.storyLevel >= 3));
     do
     {
@@ -208,32 +218,52 @@ void InitHurdles(GameState &game)
     int lastY = gridCountY - 1;
     int idx = 0;
 
-    // Corners
-    game.hurdles[idx][0] = 0; game.hurdles[idx++][1] = 0;
-    game.hurdles[idx][0] = 1; game.hurdles[idx++][1] = 0;
-    game.hurdles[idx][0] = 2; game.hurdles[idx++][1] = 0;
-    game.hurdles[idx][0] = 0; game.hurdles[idx++][1] = 1;
-    game.hurdles[idx][0] = 0; game.hurdles[idx++][1] = 2;
+    // set up corner walls
+    game.hurdles[idx][0] = 0;
+    game.hurdles[idx++][1] = 0;
+    game.hurdles[idx][0] = 1;
+    game.hurdles[idx++][1] = 0;
+    game.hurdles[idx][0] = 2;
+    game.hurdles[idx++][1] = 0;
+    game.hurdles[idx][0] = 0;
+    game.hurdles[idx++][1] = 1;
+    game.hurdles[idx][0] = 0;
+    game.hurdles[idx++][1] = 2;
 
-    game.hurdles[idx][0] = lastX; game.hurdles[idx++][1] = lastY;
-    game.hurdles[idx][0] = lastX - 1; game.hurdles[idx++][1] = lastY;
-    game.hurdles[idx][0] = lastX - 2; game.hurdles[idx++][1] = lastY;
-    game.hurdles[idx][0] = lastX; game.hurdles[idx++][1] = lastY - 1;
-    game.hurdles[idx][0] = lastX; game.hurdles[idx++][1] = lastY - 2;
+    game.hurdles[idx][0] = lastX;
+    game.hurdles[idx++][1] = lastY;
+    game.hurdles[idx][0] = lastX - 1;
+    game.hurdles[idx++][1] = lastY;
+    game.hurdles[idx][0] = lastX - 2;
+    game.hurdles[idx++][1] = lastY;
+    game.hurdles[idx][0] = lastX;
+    game.hurdles[idx++][1] = lastY - 1;
+    game.hurdles[idx][0] = lastX;
+    game.hurdles[idx++][1] = lastY - 2;
 
-    game.hurdles[idx][0] = lastX; game.hurdles[idx++][1] = 0;
-    game.hurdles[idx][0] = lastX - 1; game.hurdles[idx++][1] = 0;
-    game.hurdles[idx][0] = lastX - 2; game.hurdles[idx++][1] = 0;
-    game.hurdles[idx][0] = lastX; game.hurdles[idx++][1] = 1;
-    game.hurdles[idx][0] = lastX; game.hurdles[idx++][1] = 2;
+    game.hurdles[idx][0] = lastX;
+    game.hurdles[idx++][1] = 0;
+    game.hurdles[idx][0] = lastX - 1;
+    game.hurdles[idx++][1] = 0;
+    game.hurdles[idx][0] = lastX - 2;
+    game.hurdles[idx++][1] = 0;
+    game.hurdles[idx][0] = lastX;
+    game.hurdles[idx++][1] = 1;
+    game.hurdles[idx][0] = lastX;
+    game.hurdles[idx++][1] = 2;
 
-    game.hurdles[idx][0] = 0; game.hurdles[idx++][1] = lastY;
-    game.hurdles[idx][0] = 1; game.hurdles[idx++][1] = lastY;
-    game.hurdles[idx][0] = 2; game.hurdles[idx++][1] = lastY;
-    game.hurdles[idx][0] = 0; game.hurdles[idx++][1] = lastY - 1;
-    game.hurdles[idx][0] = 0; game.hurdles[idx++][1] = lastY - 2;
+    game.hurdles[idx][0] = 0;
+    game.hurdles[idx++][1] = lastY;
+    game.hurdles[idx][0] = 1;
+    game.hurdles[idx++][1] = lastY;
+    game.hurdles[idx][0] = 2;
+    game.hurdles[idx++][1] = lastY;
+    game.hurdles[idx][0] = 0;
+    game.hurdles[idx++][1] = lastY - 1;
+    game.hurdles[idx][0] = 0;
+    game.hurdles[idx++][1] = lastY - 2;
 
-    // Middle Barrier
+    // barrier in the middle
     int gap = 4;
     int startY = (gridCountY - gap) / 2 - 1;
     for (int i = 0; i < 7; i++)
@@ -246,30 +276,38 @@ void InitHurdles(GameState &game)
     game.hurdleCount = idx;
 }
 
-void LoadHighscore(GameState &game) {
+void LoadHighscore(GameState &game)
+{
     std::ifstream hsFileIn("highscore.txt");
-    if (hsFileIn.is_open()) {
+    if (hsFileIn.is_open())
+    {
         hsFileIn >> game.highscore;
         hsFileIn.close();
     }
 }
 
-void CheckSaveFile(GameState &game) {
+void CheckSaveFile(GameState &game)
+{
     std::ifstream savecheck("savefile.txt");
-    if (savecheck.is_open()) {
+    if (savecheck.is_open())
+    {
         game.hasSaveFile = true;
         savecheck.close();
     }
 }
 
-void LoadGame(GameState &game) {
-    if (game.hasSaveFile) {
+void LoadGame(GameState &game)
+{
+    if (game.hasSaveFile)
+    {
         std::ifstream load("savefile.txt");
-        if (load.is_open()) {
+        if (load.is_open())
+        {
             int modeInt;
             load >> game.snakeLength >> game.score >> game.key >> game.foodX >> game.foodY >> modeInt;
             game.currentMode = (GameMode)modeInt;
-            for (int i = 0; i < game.snakeLength; i++) {
+            for (int i = 0; i < game.snakeLength; i++)
+            {
                 load >> game.snakePosition[i][0] >> game.snakePosition[i][1];
             }
             load.close();
@@ -280,135 +318,192 @@ void LoadGame(GameState &game) {
     }
 }
 
-void SaveGame(GameState &game) {
+void SaveGame(GameState &game)
+{
     std::ofstream save("savefile.txt");
-    if (save.is_open()) {
+    if (save.is_open())
+    {
         save << game.snakeLength << "\n"
              << game.score << "\n"
              << game.key << "\n"
              << game.foodX << "\n"
              << game.foodY << "\n"
              << (int)game.currentMode;
-        for (int i = 0; i < game.snakeLength; i++) {
-            save << "\n" << game.snakePosition[i][0] << " " << game.snakePosition[i][1];
+        for (int i = 0; i < game.snakeLength; i++)
+        {
+            save << "\n"
+                 << game.snakePosition[i][0] << " " << game.snakePosition[i][1];
         }
         save.close();
         game.hasSaveFile = true;
     }
 }
 
-// --- UPDATE LOGIC FUNCTIONS ---
+//
+// UPDATES
+//
 
 void UpdateMenu(GameState &game)
 {
-    if (IsKeyPressed(KEY_DOWN)) game.menuOption++;
-    if (IsKeyPressed(KEY_UP)) game.menuOption--;
-    if (game.menuOption > 5) game.menuOption = 1;
-    if (game.menuOption < 1) game.menuOption = 5;
+    if (IsKeyPressed(KEY_DOWN))
+        game.menuOption++;
+    if (IsKeyPressed(KEY_UP))
+        game.menuOption--;
+    if (game.menuOption > 5)
+        game.menuOption = 1;
+    if (game.menuOption < 1)
+        game.menuOption = 5;
 
-    if (game.menuOption == 4) // Mode selection
+    // handle mode switching
+    if (game.menuOption == 4)
     {
-        if (IsKeyPressed(KEY_RIGHT)) {
+        if (IsKeyPressed(KEY_RIGHT))
+        {
             int next = (int)game.currentMode + 1;
-            if (next > 3) next = 0;
+            if (next > 3)
+                next = 0;
             game.currentMode = (GameMode)next;
         }
-        if (IsKeyPressed(KEY_LEFT)) {
+        if (IsKeyPressed(KEY_LEFT))
+        {
             int prev = (int)game.currentMode - 1;
-            if (prev < 0) prev = 3;
+            if (prev < 0)
+                prev = 3;
             game.currentMode = (GameMode)prev;
         }
     }
 
     if (IsKeyPressed(KEY_ENTER))
     {
-        if (game.menuOption == 5) exit(0); // Exit
-        if (game.menuOption == 3) // Theme
+        switch (game.menuOption)
         {
-            if (game.theme == "Classic") game.theme = "Desert";
-            else game.theme = "Classic";
-        }
-        if (game.menuOption == 2) // New Game
-        {
+        case 1: // continue
+            LoadGame(game);
+            break;
+        case 2: // new game
             game.stateofgame = 2;
             ResetGame(game, true);
-        }
-        if (game.menuOption == 1) // Continue
-        {
-            LoadGame(game);
+            break;
+        case 3: // toggle theme
+            if (game.theme == "Classic")
+                game.theme = "Desert";
+            else
+                game.theme = "Classic";
+            break;
+        case 5: // exit
+            exit(0);
+            break;
+        default:
+            break;
         }
     }
 }
 
 void UpdateGameplay(GameState &game)
 {
-    if (game.gameOver) {
-        if (game.hasSaveFile) { remove("savefile.txt"); game.hasSaveFile = false; }
-        if (IsKeyPressed(KEY_R)) ResetGame(game, true);
+    if (game.gameOver)
+    {
+        if (game.hasSaveFile)
+        {
+            remove("savefile.txt");
+            game.hasSaveFile = false;
+        }
+        if (IsKeyPressed(KEY_R))
+            ResetGame(game, true);
         return;
     }
 
     bool wallsActive = (game.currentMode == NORMAL || game.currentMode == HARD || (game.currentMode == STORY && game.storyLevel >= 2));
     bool hurdlesActive = (game.currentMode == HARD || (game.currentMode == STORY && game.storyLevel >= 3));
 
-    // Story Mode Logic
+    // handle story progression
     if (game.currentMode == STORY)
     {
         int nextLevel = 1;
-        if (game.score >= 50 && game.score < 100) nextLevel = 2;
-        else if (game.score >= 100) nextLevel = 3;
+        if (game.score >= 50 && game.score < 100)
+            nextLevel = 2;
+        else if (game.score >= 100)
+            nextLevel = 3;
 
         if (nextLevel > game.storyLevel)
         {
             game.storyLevel = nextLevel;
             game.isLevelTransitioning = true;
             game.transitionTimer = game.transitionDuration;
-            
-            // Safe Spawn Pattern logic
+            SaveGame(game);
+
+            // respawn logic to prevent glitches on level change
             game.key = 'R';
             int cx = gridCountX / 2;
             int cy = gridCountY / 2;
-            for (int i = 0; i < game.snakeLength; i++) {
+            for (int i = 0; i < game.snakeLength; i++)
+            {
                 game.snakePosition[i][0] = cx - i;
                 game.snakePosition[i][1] = cy;
             }
-            
-            // Respawn Food
+
+            // check hurdles before spawning food
             bool nextHurdles = (game.storyLevel >= 3);
-            do {
+            do
+            {
                 game.foodX = GetRandomValue(0, gridCountX - 1);
                 game.foodY = GetRandomValue(0, gridCountY - 1);
             } while (IsTileBlocked(game.foodX, game.foodY, game, nextHurdles));
         }
     }
 
-    // Highscore Update
-    if (game.score > game.highscore) {
+    // save highscore if beat
+    if (game.score > game.highscore)
+    {
         game.highscore = game.score;
         std::ofstream hsOut("highscore.txt");
-        if (hsOut.is_open()) { hsOut << game.highscore; hsOut.close(); }
+        if (hsOut.is_open())
+        {
+            hsOut << game.highscore;
+            hsOut.close();
+        }
     }
 
-    // Transition Timer
-    if (game.isLevelTransitioning) {
+    // handle transition timer
+    if (game.isLevelTransitioning)
+    {
         game.transitionTimer -= GetFrameTime();
-        if (game.transitionTimer <= 0) {
+        if (game.transitionTimer <= 0)
+        {
             game.isLevelTransitioning = false;
             game.transitionTimer = 0;
             game.allowMove = true;
         }
-        return; // Skip movement
+        return;
     }
 
-    // Input Handling
-    if (game.allowMove) {
-        if (IsKeyPressed(KEY_RIGHT) && game.key != 'L') { game.key = 'R'; game.allowMove = false; }
-        else if (IsKeyPressed(KEY_LEFT) && game.key != 'R') { game.key = 'L'; game.allowMove = false; }
-        else if (IsKeyPressed(KEY_UP) && game.key != 'D') { game.key = 'U'; game.allowMove = false; }
-        else if (IsKeyPressed(KEY_DOWN) && game.key != 'U') { game.key = 'D'; game.allowMove = false; }
+    // input check
+    if (game.allowMove)
+    {
+        // prevent 180 degree turns
+        if (IsKeyPressed(KEY_RIGHT) && game.key != 'L')
+        {
+            game.key = 'R';
+            game.allowMove = false;
+        }
+        else if (IsKeyPressed(KEY_LEFT) && game.key != 'R')
+        {
+            game.key = 'L';
+            game.allowMove = false;
+        }
+        else if (IsKeyPressed(KEY_UP) && game.key != 'D')
+        {
+            game.key = 'U';
+            game.allowMove = false;
+        }
+        else if (IsKeyPressed(KEY_DOWN) && game.key != 'U')
+        {
+            game.key = 'D';
+            game.allowMove = false;
+        }
     }
 
-    // Movement Loop
+    // move timer loop
     game.moveTimer += GetFrameTime();
     if (game.moveTimer >= game.moveInterval)
     {
@@ -418,78 +513,116 @@ void UpdateGameplay(GameState &game)
         int nextX = game.snakePosition[0][0];
         int nextY = game.snakePosition[0][1];
 
-        if (game.key == 'R') nextX++;
-        if (game.key == 'L') nextX--;
-        if (game.key == 'U') nextY--;
-        if (game.key == 'D') nextY++;
+        switch (game.key)
+        {
+        case 'R':
+            nextX++;
+            break;
+        case 'L':
+            nextX--;
+            break;
+        case 'U':
+            nextY--;
+            break;
+        case 'D':
+            nextY++;
+            break;
+        }
 
-        // Collision: Walls
-        if (nextX < 0 || nextX >= gridCountX || nextY < 0 || nextY >= gridCountY) {
-            if (wallsActive) {
+        // wall collision
+        if (nextX < 0 || nextX >= gridCountX || nextY < 0 || nextY >= gridCountY)
+        {
+            if (wallsActive)
+            {
                 game.gameOver = true;
                 return;
-            } else {
-                if (nextX < 0) nextX = gridCountX - 1;
-                if (nextX >= gridCountX) nextX = 0;
-                if (nextY < 0) nextY = gridCountY - 1;
-                if (nextY >= gridCountY) nextY = 0;
+            }
+            else
+            {
+                // wrap around logic
+                if (nextX < 0)
+                    nextX = gridCountX - 1;
+                if (nextX >= gridCountX)
+                    nextX = 0;
+                if (nextY < 0)
+                    nextY = gridCountY - 1;
+                if (nextY >= gridCountY)
+                    nextY = 0;
             }
         }
 
-        // Collision: Hurdles
-        if (hurdlesActive) {
-            for (int i = 0; i < game.hurdleCount; i++) {
-                if (nextX == game.hurdles[i][0] && nextY == game.hurdles[i][1]) {
+        // hurdle collision
+        if (hurdlesActive)
+        {
+            for (int i = 0; i < game.hurdleCount; i++)
+            {
+                if (nextX == game.hurdles[i][0] && nextY == game.hurdles[i][1])
+                {
                     game.gameOver = true;
                     return;
                 }
             }
         }
 
-        // Move Body
-        for (int i = game.snakeLength; i > 0; i--) {
+        // move body segments
+        for (int i = game.snakeLength; i > 0; i--)
+        {
             game.snakePosition[i][0] = game.snakePosition[i - 1][0];
             game.snakePosition[i][1] = game.snakePosition[i - 1][1];
         }
         game.snakePosition[0][0] = nextX;
         game.snakePosition[0][1] = nextY;
 
-        // Collision: Food
-        if (nextX == game.foodX && nextY == game.foodY) {
+        // food collision
+        if (nextX == game.foodX && nextY == game.foodY)
+        {
             game.snakeLength++;
             game.score += 10;
-            if (game.moveInterval > 0.05f) game.moveInterval -= 0.001f;
-            do {
+            if (game.moveInterval > 0.05f)
+                game.moveInterval -= 0.001f; // slight speed up
+            do
+            {
                 game.foodX = GetRandomValue(0, gridCountX - 1);
                 game.foodY = GetRandomValue(0, gridCountY - 1);
             } while (IsTileBlocked(game.foodX, game.foodY, game, hurdlesActive));
+            SaveGame(game);
         }
 
-        // Collision: Self
-        if (!game.gameOver) {
-            for (int i = 1; i < game.snakeLength; i++) {
-                if (game.snakePosition[0][0] == game.snakePosition[i][0] && game.snakePosition[0][1] == game.snakePosition[i][1]) {
+        // self collision
+        if (!game.gameOver)
+        {
+            for (int i = 1; i < game.snakeLength; i++)
+            {
+                if (game.snakePosition[0][0] == game.snakePosition[i][0] && game.snakePosition[0][1] == game.snakePosition[i][1])
+                {
                     game.gameOver = true;
                 }
             }
         }
-
-        if (!game.gameOver) SaveGame(game);
     }
 }
 
-// --- DRAWING FUNCTIONS ---
+// DRAWING
 
 void DrawMenu(GameState &game)
 {
-    // Define Colors Locally based on theme selection
+    // colors based on theme
     Color bg, box, sel, text, textSel;
-    if (game.theme == "Classic") {
-        bg = {185, 205, 160, 255}; box = {160, 190, 140, 255};
-        sel = {120, 150, 110, 255}; text = {60, 80, 50, 255}; textSel = WHITE;
-    } else {
-        bg = {240, 225, 185, 255}; box = {225, 210, 178, 255};
-        sel = {25, 40, 75, 255}; text = {60, 45, 25, 255}; textSel = WHITE;
+    if (game.theme == "Classic")
+    {
+        bg = {185, 205, 160, 255};
+        box = {160, 190, 140, 255};
+        sel = {120, 150, 110, 255};
+        text = {60, 80, 50, 255};
+        textSel = WHITE;
+    }
+    else
+    {
+        bg = {240, 225, 185, 255};
+        box = {225, 210, 178, 255};
+        sel = {25, 40, 75, 255};
+        text = {60, 45, 25, 255};
+        textSel = WHITE;
     }
 
     ClearBackground(bg);
@@ -499,41 +632,62 @@ void DrawMenu(GameState &game)
 
     int startY = 250, gap = 70, boxW = 300, boxH = 50;
 
-    // --- Options Loop for cleaner code ---
-    const char* titles[] = {"Continue", "New Game", "Theme", "Mode", "Exit"};
+    const char *titles[] = {"Continue", "New Game", "Theme", "Mode", "Exit"};
     for (int i = 1; i <= 5; i++)
     {
-        int yPos = startY + (gap * (i - 1))+100;
+        int yPos = startY + (gap * (i - 1)) + 100;
         std::string display = titles[i - 1];
 
-        // Custom Labels
-        if (i == 3) display = "Theme: " + game.theme;
-        if (i == 4) {
+        // custom labels
+        if (i == 3)
+            display = "Theme: " + game.theme;
+        if (i == 4)
+        {
             display = "Mode: ";
-            if (game.currentMode == EASY) display += "< Easy >";
-            else if (game.currentMode == NORMAL) display += "< Normal >";
-            else if (game.currentMode == HARD) display += "< Hard >";
-            else display += "< Story >";
+            switch (game.currentMode)
+            {
+            case EASY:
+                display += "< Easy >";
+                break;
+            case NORMAL:
+                display += "< Normal >";
+                break;
+            case HARD:
+                display += "< Hard >";
+                break;
+            case STORY:
+                display += "< Story >";
+                break;
+            }
         }
 
         if (game.menuOption == i)
         {
-            if (i == 1 && !game.hasSaveFile) {
+            if (i == 1 && !game.hasSaveFile)
+            {
                 DrawRectangle(screenWidth / 2 - 150, yPos, boxW, boxH, RED);
                 DrawText(display.c_str(), screenWidth / 2 - 40, yPos + 15, 20, WHITE);
-            } else {
+            }
+            else
+            {
                 DrawRectangle(screenWidth / 2 - 150, yPos, boxW, boxH, sel);
-                // Adjust text offset for Theme/Mode to match original look
-                int offset = (i==3) ? 60 : (i==4 ? 70 : 40);
-                if (i==2) offset = 45; if(i==5) offset = 20;
+                // aligning text
+                int offset = (i == 3) ? 60 : (i == 4 ? 70 : 40);
+                if (i == 2)
+                    offset = 45;
+                if (i == 5)
+                    offset = 20;
                 DrawText(display.c_str(), screenWidth / 2 - offset, yPos + 15, 20, textSel);
             }
         }
         else
         {
             DrawRectangleLines(screenWidth / 2 - 150, yPos, boxW, boxH, box);
-            int offset = (i==3) ? 60 : (i==4 ? 70 : 40);
-             if (i==2) offset = 45; if(i==5) offset = 20;
+            int offset = (i == 3) ? 60 : (i == 4 ? 70 : 40);
+            if (i == 2)
+                offset = 45;
+            if (i == 5)
+                offset = 20;
             DrawText(display.c_str(), screenWidth / 2 - offset, yPos + 15, 20, text);
         }
     }
@@ -541,20 +695,29 @@ void DrawMenu(GameState &game)
 
 void DrawGameplay(GameState &game)
 {
-    // Define Colors Locally
+    // local colors
     Color cBg, cGrid, cSnake, cFood, cMenuBg;
-    if (game.theme == "Classic") {
-        cBg = {150, 180, 110, 255}; cGrid = {100, 130, 90, 255};
-        cSnake = {50, 70, 40, 255}; cFood = {220, 0, 0, 255}; cMenuBg = {185, 205, 160, 255};
-    } else {
-        cBg = {255, 246, 199, 255}; cGrid = {232, 223, 194, 255};
-        cSnake = {15, 26, 51, 255}; cFood = {255, 79, 163, 255}; cMenuBg = {240, 225, 185, 255};
+    if (game.theme == "Classic")
+    {
+        cBg = {150, 180, 110, 255};
+        cGrid = {100, 130, 90, 255};
+        cSnake = {50, 70, 40, 255};
+        cFood = {200, 0, 0, 255};
+        cMenuBg = {185, 205, 160, 255};
+    }
+    else
+    {
+        cBg = {255, 246, 199, 255};
+        cGrid = {232, 223, 194, 255};
+        cSnake = {15, 26, 51, 255};
+        cFood = {255, 79, 163, 255};
+        cMenuBg = {240, 225, 185, 255};
     }
 
     ClearBackground(cMenuBg);
     DrawRectangle(boardOffsetX, boardOffsetY, boardWidth, boardHeight, cBg);
 
-    // Grid
+    // grid
     for (int i = 0; i <= gridCountX; i++)
         DrawLine(boardOffsetX + i * cellSize, boardOffsetY, boardOffsetX + i * cellSize, boardOffsetY + boardHeight, cGrid);
     for (int i = 0; i <= gridCountY; i++)
@@ -563,36 +726,116 @@ void DrawGameplay(GameState &game)
     bool wallsActive = (game.currentMode == NORMAL || game.currentMode == HARD || (game.currentMode == STORY && game.storyLevel >= 2));
     bool hurdlesActive = (game.currentMode == HARD || (game.currentMode == STORY && game.storyLevel >= 3));
 
-    // Hurdles
-    if (hurdlesActive) {
+    // draw hurdles
+    if (hurdlesActive)
+    {
         for (int i = 0; i < game.hurdleCount; i++)
             DrawRectangle(boardOffsetX + game.hurdles[i][0] * cellSize, boardOffsetY + game.hurdles[i][1] * cellSize, cellSize, cellSize, DARKGRAY);
     }
 
-    // Food
-    DrawRectangle(boardOffsetX + game.foodX * cellSize, boardOffsetY + game.foodY * cellSize, cellSize, cellSize, cFood);
+    // draw food
+    float fruitPixelX = boardOffsetX + game.foodX * cellSize + cellSize / 2.0f;
+    float fruitPixelY = boardOffsetY + game.foodY * cellSize + cellSize / 2.0f;
+    float fruitRadius = cellSize / 2.0f - 4;
 
-    // Snake
-    for (int i = 0; i < game.snakeLength; i++)
-        DrawRectangle(boardOffsetX + game.snakePosition[i][0] * cellSize, boardOffsetY + game.snakePosition[i][1] * cellSize, cellSize, cellSize, cSnake);
+    // apple parts
+    DrawLineEx((Vector2){fruitPixelX, fruitPixelY - fruitRadius}, (Vector2){fruitPixelX, fruitPixelY - fruitRadius - 10}, 3, BROWN);
+    DrawEllipse(fruitPixelX + 6, fruitPixelY - fruitRadius - 5, 6, 3, GREEN);
+    DrawCircleV((Vector2){fruitPixelX, fruitPixelY}, fruitRadius, cFood);
 
-    // Walls
-    if (wallsActive) {
+    // draw snake
+    for (int i = game.snakeLength - 1; i >= 0; i--)
+    {
+        float snakePixelX = boardOffsetX + game.snakePosition[i][0] * cellSize + cellSize / 2.0f;
+        float snakePixelY = boardOffsetY + game.snakePosition[i][1] * cellSize + cellSize / 2.0f;
+        float segmentRadius = cellSize / 2.0f;
+
+        if (i == 0) // head
+        {
+            DrawCircleV((Vector2){snakePixelX, snakePixelY}, segmentRadius, cSnake);
+
+            // eye calc
+            float eyeOffsetX = 0;
+            float eyeOffsetY = 0;
+            float eyeSep = 8;
+
+            switch (game.key)
+            {
+            case 'R':
+                eyeOffsetX = eyeSep;
+                break;
+            case 'L':
+                eyeOffsetX = -eyeSep;
+                break;
+            case 'U':
+                eyeOffsetY = -eyeSep;
+                break;
+            case 'D':
+                eyeOffsetY = eyeSep;
+                break;
+            }
+
+            Vector2 leftEye, rightEye;
+            if (game.key == 'U' || game.key == 'D')
+            {
+                leftEye = {snakePixelX - 6, snakePixelY + eyeOffsetY};
+                rightEye = {snakePixelX + 6, snakePixelY + eyeOffsetY};
+            }
+            else
+            {
+                leftEye = {snakePixelX + eyeOffsetX, snakePixelY - 6};
+                rightEye = {snakePixelX + eyeOffsetX, snakePixelY + 6};
+            }
+
+            // draw eyes
+            DrawCircleV(leftEye, 5, WHITE);
+            DrawCircleV(rightEye, 5, WHITE);
+            DrawCircleV(leftEye, 2, BLACK);
+            DrawCircleV(rightEye, 2, BLACK);
+        }
+        else // body
+        {
+            DrawCircleV((Vector2){snakePixelX, snakePixelY}, segmentRadius - 1, cSnake);
+        }
+    }
+
+    // walls
+    if (wallsActive)
+    {
         DrawRectangleLinesEx((Rectangle){(float)boardOffsetX, (float)boardOffsetY, (float)boardWidth, (float)boardHeight}, 4, RED);
     }
 
-    // UI
+    // UI text
     DrawText(TextFormat("Score: %i", game.score), 20, 20, 30, WHITE);
-    
-    std::string mText; Color mColor;
-    if (game.currentMode == EASY) { mText = "EASY"; mColor = GREEN; }
-    else if (game.currentMode == NORMAL) { mText = "NORMAL"; mColor = ORANGE; }
-    else if (game.currentMode == HARD) { mText = "HARD"; mColor = RED; }
-    else { mText = "STORY - LVL " + std::to_string(game.storyLevel); mColor = SKYBLUE; }
+
+    std::string mText;
+    Color mColor;
+
+    switch (game.currentMode)
+    {
+    case EASY:
+        mText = "EASY";
+        mColor = GREEN;
+        break;
+    case NORMAL:
+        mText = "NORMAL";
+        mColor = ORANGE;
+        break;
+    case HARD:
+        mText = "HARD";
+        mColor = RED;
+        break;
+    case STORY:
+        mText = "STORY - LVL " + std::to_string(game.storyLevel);
+        mColor = SKYBLUE;
+        break;
+    }
+
     DrawText(mText.c_str(), screenWidth / 2 - MeasureText(mText.c_str(), 30) / 2, 20, 30, mColor);
 
-    // Transition Overlay
-    if (game.isLevelTransitioning) {
+    // level transition
+    if (game.isLevelTransitioning)
+    {
         DrawRectangle(0, 0, screenWidth, screenHeight, Color{0, 0, 0, 100});
         std::string levelMsg = "LEVEL " + std::to_string(game.storyLevel);
         DrawText(levelMsg.c_str(), screenWidth / 2 - MeasureText(levelMsg.c_str(), 60) / 2, screenHeight / 2 - 100, 60, GOLD);
@@ -601,8 +844,9 @@ void DrawGameplay(GameState &game)
         DrawText("Get Ready!", screenWidth / 2 - MeasureText("Get Ready!", 30) / 2, screenHeight / 2 + 80, 30, LIGHTGRAY);
     }
 
-    // Game Over Overlay
-    if (game.gameOver) {
+    // game over screen
+    if (game.gameOver)
+    {
         DrawText("GAME OVER", screenWidth / 2 - MeasureText("GAME OVER", 60) / 2, screenHeight / 2 - 60, 60, RED);
         DrawText("Press ESC for Menu", screenWidth / 2 - MeasureText("Press ESC for Menu", 20) / 2, screenHeight / 2 + 10, 20, LIGHTGRAY);
         DrawText("Press 'R' to RESTART", screenWidth / 2 - MeasureText("Press 'R' to RESTART", 25) / 2, screenHeight / 2 + 40, 25, GOLD);
