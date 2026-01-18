@@ -1,180 +1,186 @@
-# Simple Raylib Ball Game
-A small C++ game made using Raylib.
-You control a white ball that moves around the screen, wraps around the edges, and eats a red food circle that respawns randomly.
+# 🐍 Snake Game — Ultimate Version
 
-This project is perfect for beginners learning:
-1. window creation
-2.drawing shapes
-3. movement handling
-4. collisions
-5. randomness
+A feature-rich implementation of the classic **Snake** game written in **C++** using the **Raylib** library. Includes multiple game modes (Easy / Normal / Hard / Story), persistent save & high-score, dynamic themes, and polished visuals.
 
-How to Use This Project
+---
 
-Open the project by double-clicking main.code-workspace.
+## Table of Contents
 
-From VS Code’s Explorer, open src/main.cpp.
+* [Demo / Screenshots](#demo--screenshots)
+* [Features](#features)
+* [Controls](#controls)
+* [Prerequisites](#prerequisites)
+* [Folder Structure](#folder-structure)
+* [Build & Run](#build--run)
+* [Game Modes Explained](#game-modes-explained)
+* [Save Files](#save-files)
+* [Project Info & Credits](#project-info--credits)
+* [License](#license)
 
-Press F5 to build and run the game.
+---
 
-Watch the explanation video included in the project folder.
+## Demo / Screenshots
 
-Features
+*(Add screenshots/gifs of your game here for a nicer GitHub README.)*
 
-Smooth 59 FPS rendering
+---
 
-Arrow-key movement
+## Features
 
-Keeps moving until new direction chosen
+* **4 Game Modes**
 
-Screen wrap-around (Pac-Man style)
+  * Easy (wrap-around, no walls)
+  * Normal (walls active)
+  * Hard (walls + static obstacles)
+  * Story (progressive difficulty with autosave)
+* **Save & Load** for Story mode (auto-save + continue)
+* **High Score Tracking**
+* **Dynamic Themes** (e.g., Classic / Desert)
+* **Polished visuals** (eye mechanics, transitions, animations)
 
-Random food generation
+---
 
-Collision detection using distance formula
+## Controls
 
-How to Compile Manually (Optional)
+| Key        | Action                                |
+| ---------- | ------------------------------------- |
+| Arrow Keys | Move snake (Up / Down / Left / Right) |
+| Enter      | Select menu option                    |
+| ESC        | Pause / Return to menu                |
+| R          | Restart (on Game Over screen)         |
 
-Windows + MinGW + Raylib:
+---
 
-g++ main.cpp -o game -lraylib -lopengl32 -lgdi32 -lwinmm
+## Prerequisites
 
+### Core Tools
 
-Then run:
+* **C++ compiler:** `g++` (MinGW on Windows), `clang`, or MSVC.
+* **Code editor (recommended):** Visual Studio Code, or Visual Studio Community on Windows.
 
-./game
+### Required Library
 
-# Code Explanation
+* **Raylib** — games use Raylib for graphics/input/audio.
 
-Everything below explains how the program works, part by part.
+  * Download Raylib releases from the official repo: `https://github.com/raysan5/raylib/releases`
+  * On Windows the **w64devkit** installer or prebuilt packages are the easiest route.
 
-1. Includes
-#include <raylib.h>
-#include <stdlib.h>
-#include <time.h>
-#include <math.h>
+---
 
+## Folder Structure (recommended)
 
-raylib.h → graphics, window, drawing, input
+```
+Project Folder/
+├── main.cpp          # Source code entry point
+├── lib/              # raylib library files (e.g., libraylib.a)
+├── include/          # raylib.h and other headers
+├── assets/           # images, fonts, audio (if any)
+├── savefile.txt      # (auto-created) story progress
+├── highscore.txt     # (auto-created) persistent high score
+└── .vscode/          # optional VS Code tasks / launch configs
+```
 
-stdlib.h → randomness functions
+---
 
-time.h → seeding the random generator
+## Build & Run
 
-math.h → square root for detecting collision distances
+### Command-Line (Windows with g++)
 
-2. Window + Player Setup
-const int screenWidth = 810;
-const int screenHeight = 900;
-int BallX = screenWidth / 2;
-int BallY = screenHeight / 2;
-char key = 'Z';
+If Raylib is installed and available to the linker:
 
+```bash
+g++ main.cpp -o SnakeGame -lraylib -lgdi32 -lwinmm
+```
 
-Creates the window size, centers the player, and stores movement direction.
+> The `-lgdi32 -lwinmm` flags are needed on Windows. Linux/macOS generally require only `-lraylib` (platform-specific audio/window libs may vary).
 
-Colors:
+### Example (Linux/macOS)
 
-Color black = {0, 0, 0, 255};
-Color white = {255, 255, 255, 255};
-Color red   = {255, 73, 92, 255};
+```bash
+g++ main.cpp -o SnakeGame -lraylib
+```
 
+### Using Visual Studio Code
 
-Player and food sizes:
+1. Place `raylib` headers in `include/` and library files in `lib/` (or install raylib system-wide).
+2. Create a `.vscode/tasks.json` entry that compiles with the proper flags:
 
-int playerRadius = 20;
-int foodRadius = 10;
-
-3. Window Initialization
-InitWindow(screenWidth, screenHeight, "first game window by umais using raylib");
-SetTargetFPS(59);
-srand(time(NULL));
-
-
-Creates the game window
-
-Sets smooth frame rate
-
-Seeds random numbers
-
-4. Food Spawn
-do {
-    foodX = rand() % screenWidth;
-    foodY = rand() % screenHeight;
-} while (foodX == BallX && foodY == BallY);
-
-
-Makes sure food never spawns on top of the player.
-
-Main Game Loop
-while (!WindowShouldClose()) {
-
-
-Runs until the user closes the window.
-
-5. Movement Input
-if (IsKeyDown(KEY_RIGHT)) key = 'R';
-if (IsKeyDown(KEY_LEFT))  key = 'L';
-if (IsKeyDown(KEY_UP))    key = 'U';
-if (IsKeyDown(KEY_DOWN))  key = 'D';
-
-
-Direction updates only when a new key is pressed.
-
-6. Move Player
-if (key == 'R') BallX += 5;
-if (key == 'L') BallX -= 5;
-if (key == 'U') BallY -= 5;
-if (key == 'D') BallY += 5;
-
-
-Moves the ball 5 pixels each frame.
-
-7. Screen Wrap-Around
-if (BallX > screenWidth)  BallX = 0;
-if (BallX < 0)            BallX = screenWidth;
-if (BallY > screenHeight) BallY = 0;
-if (BallY < 0)            BallY = screenHeight;
-
-
-If the ball leaves one edge, it appears on the opposite side.
-
-8. Collision Detection
-float dx = BallX - foodX;
-float dy = BallY - foodY;
-float distance = sqrt(dx*dx + dy*dy);
-
-
-Standard distance formula from geometry.
-
-If touching:
-
-if (distance <= playerRadius + foodRadius) {
-    // respawn food
+```json
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Build SnakeGame",
+      "type": "shell",
+      "command": "g++",
+      "args": [
+        "main.cpp",
+        "-o",
+        "SnakeGame",
+        "-lraylib",
+        "-lgdi32",
+        "-lwinmm"
+      ],
+      "group": "build"
+    }
+  ]
 }
+```
+
+3. Run the build task (`Terminal → Run Build Task`) and execute the produced binary.
+
+---
+
+## Game Modes Explained
+
+* **Easy**
+
+  * No walls: the snake wraps around screen edges.
+  * Good for learning controls and mechanics.
+* **Normal**
+
+  * Standard rules: walls are fatal.
+* **Hard**
+
+  * Walls + static obstacles to navigate around.
+* **Story**
+
+  * Progressive difficulty that changes with score:
+
+    * Level 1 (0–50 pts): beginner-friendly.
+    * Level 2 (50–100 pts): walls active.
+    * Level 3 (100+ pts): obstacles spawn.
+  * Story mode **auto-saves** progress so you can continue later.
+
+---
+
+## Save Files
+
+* `savefile.txt` — automatically created (Story mode progress).
+* `highscore.txt` — stores the persisted high score across sessions.
+
+> Ensure your game has write permission in the project directory so these files can be created.
+
+---
+
+## Notes & Tips
+
+* If compilation fails with linker errors, double-check:
+
+  * Raylib library path (e.g., `-L/path/to/lib`) and include path (e.g., `-I/path/to/include`).
+  * On Windows, ensure MinGW/MSYS environments are consistent with the compiler used.
+* For smooth development in VS Code, install the C/C++ extension and configure your includePath and compilerPath in `c_cpp_properties.json`.
+
+---
+
+## Project Info & Credits
+
+* **Engine / Library:** Raylib ([https://www.raylib.com](https://www.raylib.com) )
+* **Language:** C++ (std library: `<string>`, `<fstream>`, `<cmath>`, etc.)
+* **Created by:** *Group 404 Not Found : Muneeb ur Rehman , Muhammad Umais , Sadia Sahar* 
+
+---
 
 
-Food respawns randomly.
 
-9. Drawing
-BeginDrawing();
-ClearBackground(black);
-DrawCircle(foodX, foodY, foodRadius, red);
-DrawCircle(BallX, BallY, playerRadius, white);
-EndDrawing();
-
-
-Clears screen
-
-Draws food
-
-Draws player
-
-Runs every frame.
-
-10. Cleanup
-CloseWindow();
-return 0;
-
-
-Shuts down the window and ends the program.
+---
